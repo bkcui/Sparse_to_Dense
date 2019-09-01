@@ -25,8 +25,9 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='PyTorch nyudataset Training')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
-parser.add_argument('--n_samples', default=200, type=int, help='learning rate')
-parser.add_argument('--batch_size', default=8, type=int, help='learning rate')
+parser.add_argument('--n_samples', default=200, type=int, help='Sparse sample size')
+parser.add_argument('--batch_size', default=8, type=int, help='Batch size')
+parser.add_argument('--checkpoint', default='checkpoint/ResNet50.t7', type=str, help='Checkpoint location')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--predict', action='store_true', help='forward prop')
 args = parser.parse_args()
@@ -35,7 +36,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_loss = None  # best test accuracy
 loss_list = []  #for saving loss value
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-batch_size = 25
+
 
 # Data
 #print('==> Preparing data..')
@@ -91,7 +92,7 @@ if device == 'cuda':
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
-    checkpoint = torch.load('checkpoint/ResNet50.t7')
+    checkpoint = torch.load(args.checkpoint)
     net.load_state_dict(checkpoint['net'])
     best_loss = checkpoint['loss']
     start_epoch = checkpoint['epoch']
@@ -149,9 +150,9 @@ def test(epoch):
             'loss': test_loss,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, 'checkpoint/ResNet50.t7')
+        #if not os.path.isdir('checkpoint'):
+        #    os.mkdir('checkpoint')
+        torch.save(state, args.checkpoint)
         best_loss = test_loss
         loss_list = []
 
