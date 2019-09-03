@@ -56,8 +56,8 @@ nyudataset_train = dataloader.DataLoader(nyudepth_data_train, batch_size=args.ba
                                          batch_sampler=None, num_workers=0)
 nyudataset_val = dataloader.DataLoader(nyudepth_data_val, batch_size=args.batch_size, shuffle=False, sampler=None,
                                        batch_sampler=None, num_workers=0)
-#nyudataset_test = dataloader.DataLoader(nyudepth_data_val, batch_size=1, shuffle=False, sampler=None,
-#                                       batch_sampler=None, num_workers=0)
+nyudataset_test = dataloader.DataLoader(nyudepth_data_val, batch_size=1, shuffle=True, sampler=None,
+                                       batch_sampler=None, num_workers=0)
 
 
 
@@ -144,6 +144,7 @@ def test(epoch):
         with open("Loss.txt", 'a') as Loss_list:
             for item in loss_list:
                 Loss_list.write("%s\n" % item)
+            Loss_list.write("Last Epoch : %s\n" % epoch)
         print('Saving..  %f' % test_loss)
         state = {
             'net': net.state_dict(),
@@ -156,34 +157,36 @@ def test(epoch):
         best_loss = test_loss
         loss_list = []
 
-'''
+
 def predict():
     net.eval()
 
     fig = plt.figure()
     with torch.no_grad():
         for batch_idx, input_data in enumerate(nyudataset_test):
+            input_data_sparse_depth = input_data['rgbd'][0, 3, :, :]    #input sparse depth
             input_data_rgbd = input_data['rgbd'].to(device)
             outputs = net(input_data_rgbd)
             depth = transforms.ToPILImage()(outputs.cpu().view(1, 228, 304))
 
-            ax = plt.subplot(3, 1,1)
+            ax = plt.subplot(4, 1, 1)
             ax.axis('off')
             plt.imshow(transforms.ToPILImage()(input_data['rgb_ori'][0, :, :, :].view(3, 228, 304)))
 
-            ax = plt.subplot(3, 1, 2)
+            ax = plt.subplot(4, 1, 2)
             ax.axis('off')
             plt.imshow(transforms.ToPILImage()(input_data['depth'].view(1, 228, 304)))
 
-            ax = plt.subplot(3, 1, 3)
+            ax = plt.subplot(4, 1, 3)
+            ax.axis('off')
+            plt.imshow(transforms.ToPILImage()(input_data_sparse_depth.view(1, 228, 304)))
+
+            ax = plt.subplot(4, 1, 4)
             ax.axis('off')
             plt.imshow(depth)
 
             plt.show()
             input()
-'''
-
-
 
 if __name__ == '__main__':
 
@@ -191,9 +194,7 @@ if __name__ == '__main__':
     learning_rate = args.lr
 
     if args.predict:    #on test set
-        #predict()
-        pass
-
+        predict()
     else:
         for epoch in range(start_epoch, start_epoch+20):
 

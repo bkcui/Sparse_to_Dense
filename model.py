@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.models as models
 import resnet
+from types import MethodType
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -24,6 +25,22 @@ class Identity(nn.Module):
     def forward(self, x):
         return x
 
+def forward(self, x):
+    x = self.conv1(x)
+    x = self.bn1(x)
+    x = self.relu(x)
+    x = self.maxpool(x)
+
+    x = self.layer1(x)
+    x = self.layer2(x)
+    x = self.layer3(x)
+    x = self.layer4(x)
+
+    x = self.avgpool(x)
+    #x = torch.flatten(x, 1)
+    x = self.fc(x)
+
+    return x
 
 class Sparse_to_dense_net(nn.Module):
     def __init__(self):
@@ -31,11 +48,13 @@ class Sparse_to_dense_net(nn.Module):
 
         #self.input_layer = nn.Linear(4 * 228 * 304, 3*224*224)
 
-        self.resnet50 = resnet.resnet50()
+        self.resnet50 = models.resnet50(pretrained=True, progress=True)
         self.resnet50.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
+        self.resnet50.forward = MethodType(forward, self.resnet50)
         self.resnet50.avgpool = Identity()                      #fine tuning
         self.resnet50.fc = nn.Conv2d(2048, 1024, 1)    #layer link resnet50 and unsample layer
+
 
         self.unsample_layer = nn.Sequential(nn.ConvTranspose2d(1024, 512, 3, stride=2,padding=1, output_padding=1),
                                              nn.ConvTranspose2d(512, 256, 3, stride=2, padding=1, output_padding=1),

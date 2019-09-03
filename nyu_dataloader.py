@@ -110,7 +110,7 @@ class NyuDepthDataset(Dataset):
                                            transforms.ToTensor(),
                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                            transforms.ToPILImage()])
-            tRgb_ori = transforms.Compose([transforms.Resize(240),
+            tRgb_ori = transforms.Compose([transforms.Resize(240),  #for original image
                                            transforms.CenterCrop((228, 304)),
                                            transforms.ToTensor(),
                                            transforms.ToPILImage()])
@@ -203,8 +203,7 @@ def test_imgread():
             plt.show()
             break
 
-
-if __name__ == "__main__":
+def test_dataloader():
     nyudepth_dataset = NyuDepthDataset(csv_file='data/nyudepth_hdf5_2/nyudepth_hdf5_train.csv',
                                        root_dir='.',
                                        split='train',
@@ -223,4 +222,8 @@ if __name__ == "__main__":
         show_img(rgb)
         plt.show()
         input()
+
+if __name__ == "__main__":
     #test_imgread()
+    #test_dataloader()
+    pass
