@@ -51,10 +51,10 @@ class Sparse_to_dense_net(nn.Module):
         self.resnet50 = models.resnet50(pretrained=True, progress=True)
         self.resnet50.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
+        #self.dropout = nn.Dropout2d(p=0.9, inplace=True)   #dropout. To use it, should change forward()
         self.resnet50.forward = MethodType(forward, self.resnet50)
         self.resnet50.avgpool = Identity()                      #fine tuning
         self.resnet50.fc = nn.Conv2d(2048, 1024, 1)    #layer link resnet50 and unsample layer
-
 
         self.unsample_layer = nn.Sequential(nn.ConvTranspose2d(1024, 512, 3, stride=2,padding=1, output_padding=1),
                                              nn.ConvTranspose2d(512, 256, 3, stride=2, padding=1, output_padding=1),
@@ -65,6 +65,7 @@ class Sparse_to_dense_net(nn.Module):
 
     def forward(self, x):
         out = self.resnet50(x)
+        #out = self.dropout(out)
         out = self.unsample_layer(out)
         out = F.interpolate(out, size=(228, 304), mode='bilinear')
         return out

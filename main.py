@@ -15,12 +15,11 @@ import os
 import argparse
 
 from model import Sparse_to_dense_net
+from loss import ReversedHuber
 import nyu_dataloader
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
-#from models import *
-#from utils import progress_bar
 
 
 parser = argparse.ArgumentParser(description='PyTorch nyudataset Training')
@@ -56,7 +55,7 @@ nyudataset_train = dataloader.DataLoader(nyudepth_data_train, batch_size=args.ba
                                          batch_sampler=None, num_workers=0)
 nyudataset_val = dataloader.DataLoader(nyudepth_data_val, batch_size=args.batch_size, shuffle=False, sampler=None,
                                        batch_sampler=None, num_workers=0)
-nyudataset_test = dataloader.DataLoader(nyudepth_data_val, batch_size=1, shuffle=True, sampler=None,
+nyudataset_test = dataloader.DataLoader(nyudepth_data_val, batch_size=1, shuffle=False, sampler=None,
                                        batch_sampler=None, num_workers=0)
 
 
@@ -98,7 +97,8 @@ if args.resume:
     start_epoch = checkpoint['epoch']
     print('loss :', best_loss, 'epoch :', start_epoch)
 
-criterion = nn.MSELoss()
+#criterion = nn.MSELoss()
+criterion = ReversedHuber()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
 # Training
@@ -186,7 +186,7 @@ def predict():
             plt.imshow(depth)
 
             plt.show()
-            input()
+
 
 if __name__ == '__main__':
 
@@ -196,10 +196,14 @@ if __name__ == '__main__':
     if args.predict:    #on test set
         predict()
     else:
-        for epoch in range(start_epoch, start_epoch+20):
+        for epoch in range(start_epoch, start_epoch+50):
 
-            if learning_rate > 0.001 and epoch%10 == 0: #learning rate dacay
+            if learning_rate > 0.001 and epoch>10: #learning rate dacay
                 learning_rate -= 0.001
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = learning_rate
+            elif learning_rate > 0.0001 and epoch>20:
+                learning_rate -= 0.0001
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = learning_rate
             train(epoch)
